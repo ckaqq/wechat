@@ -1,4 +1,6 @@
 #忽略所有的配置文件
 php/config.php
 
+#忽略调试文件
+php/example.php
 
