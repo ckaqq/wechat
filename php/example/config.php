@@ -7,6 +7,4 @@ define('ENCODINGAESKEY', '你的ENCODINGAESKEY'); // 公众号明文模式可不
 // 调试模式
 define('DEBUG', FALSE);
 
-// 公众号类型：1.公众号; 2.企业号
-define('TYPE', 1);
 

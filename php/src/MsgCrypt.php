@@ -25,7 +25,7 @@ class MsgCrypt extends WXBizMsgCrypt
         parent::__construct($token, $encodingAesKey, $Corpid);
         $this->token = $token;
         $this->encodingAesKey = $encodingAesKey;
-        $this->appId = $appId;
+        $this->appId = $Corpid;
     }
 
     /**
@@ -52,6 +52,7 @@ class MsgCrypt extends WXBizMsgCrypt
         if (strlen($this->encodingAesKey) != 43)
             return "ERR: 40004\n\n";
         $pc = new Prpcrypt($this->encodingAesKey);
+        //var_dump(array($sEchoStr, $this->appId));exit;
         $result = $pc->decrypt($sEchoStr, $this->appId);
         return $result[0] == 0 ? $result[1] : $result[0];
     }
