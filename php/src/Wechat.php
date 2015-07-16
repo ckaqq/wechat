@@ -1,27 +1,69 @@
 <?php
 /**
- * 微信公众号、订阅号模板
+ * 微信公众号、企业号模板
  *
+ * 说明：基于当前版本的微信公众号和企业号
  * @author ChenKang <ck@kchen.cn>
+ * @version 1.0
  */
 
 require_once __DIR__ . '/MsgCrypt.php';
 
 class Wechat
 {
-
+    /**
+     * xml模板字符串
+     *
+     * @var string
+     */
     protected $templateText        = "<xml><ToUserName><![CDATA[%s]]></ToUserName><FromUserName><![CDATA[%s]]></FromUserName><CreateTime>%s</CreateTime><MsgType><![CDATA[text]]></MsgType><Content><![CDATA[%s]]></Content></xml>";
     protected $templateNewsBegin   = "<xml><ToUserName><![CDATA[%s]]></ToUserName><FromUserName><![CDATA[%s]]></FromUserName><CreateTime>%s</CreateTime><MsgType><![CDATA[news]]></MsgType><ArticleCount>%s</ArticleCount><Articles>";
     protected $templateNewsContent = "<item><Title><![CDATA[%s]]></Title><Description><![CDATA[%s]]></Description><PicUrl><![CDATA[%s]]></PicUrl><Url><![CDATA[%s]]></Url></item>";
     protected $templateNewsEnd     = "</Articles></xml>";
+
+    /**
+     * 调试模式，将错误通过文本消息回复显示
+     *
+     * @var boolean
+     */
+    private $debug;
+
+    /**
+     * 以数组的形式保存微信服务器每次发来的请求
+     *
+     * @var array
+     */
+    public $request;
+    
+    /**
+     * 加密、解密、验证URl
+     *
+     * @var MsgCrypt
+     */
+    private $msgCryptor;
+
+    /**
+     * 消息是否加密
+     *
+     * @var boolean
+     */
+    private $encrypted = false;
+
+    /**
+     * 微信请求时的GET参数，加密消息时要用到
+     *
+     * @var string
+     */
+    private $timestamp, $nonce, $msg_signature;
+
+
     /**
      * 初始化，判断此次请求是否为验证请求，并以数组形式保存
      *
      * @param string $token 验证信息
      * @param boolean $debug 调试模式，默认为关闭
      */
-    public function __construct($token, $aeskey, $appid, $debug = FALSE) {
-        //$_GET = json_decode('{"msg_signature":"e8e4f0b5384e47a1fa68bba3f75f09d11f5e8061","timestamp":"1436333042","nonce":"838760432","echostr":"ojtEf3CdFqktmu1XK9ZyazqSIMDJHFqidk6QjRcPpj2euONAU\/0F2xLpKsU\/e8uL1Kw7VCHzzkNtn\/sdRxkpzw=="}', true);
+    public function __construct($token, $aeskey = '', $appid = '', $debug = FALSE) {
 
         $this->debug = $debug;
 
@@ -52,10 +94,10 @@ class Wechat
         $echostr     = isset($_GET['echostr']) ? $_GET['echostr'] : '';
         $requestData = isset($GLOBALS['HTTP_RAW_POST_DATA']) ? $GLOBALS['HTTP_RAW_POST_DATA'] : file_get_contents("php://input");
 
-        // 加解密及验证对象
         $this->msgCryptor = new MsgCrypt($token, $aeskey, $appid);
 
-        if ($this->debug==FALSE) {
+        // 验证TOKEN
+        if ($this->debug == FALSE) {
             $validResult = TRUE;
             if ($wechatType == 1) {
                 $validResult = $this->msgCryptor->mpVerifySig($signature, $this->timestamp, $this->nonce);
@@ -65,6 +107,7 @@ class Wechat
             if (!$validResult) exit("ERR: 40001\n\n");
         }
 
+        // 企业号解密echostr
         if($wechatType == 2 && !empty($echostr)) {
             $echostr = $this->msgCryptor->qyEchoStr($echostr);
         }
@@ -132,12 +175,22 @@ class Wechat
         exit($sEncryptMsg);
     }
 
+    /**
+      * 以文本消息回复
+      * @param string $text 要回复的文本
+      * @return void
+      */
     public function echoText($text)
     {
         $resultStr = sprintf($this->templateText, $this->request['fromusername'], $this->request['tousername'], time(), $text);
         $this->echoMsg($resultStr);
     }
 
+    /**
+      * 以图文消息回复
+      * @param array $items 要回复的内容
+      * @return void
+      */
     public function echoNews($items)
     {
         $resultStr = sprintf($this->templateNewsBegin, $this->request['fromusername'], $this->request['tousername'], time(), count($item));
@@ -148,9 +201,13 @@ class Wechat
         $this->echoMsg($resultStr);
     }
 
+    /**
+      * 进行消息的识别及回复
+      * @return void
+      */
     public function run()
     {
-        eval('$this->respon_' . $this->request['msgtype'] . '();');
+        eval('$this->respon_' . strtolower($this->request['msgtype']) . '();');
     }
 
     // 文本消息
@@ -166,9 +223,9 @@ class Wechat
     public function respon_video() {}
 
     // 小视频消息
-    public function respon_shortvideo(){}
+    public function respon_shortvideo() {}
 
-    // 小视频消息
+    // 链接消息
     public function respon_link(){}
 
     // 位置消息
