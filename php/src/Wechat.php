@@ -245,7 +245,19 @@ class Wechat
     public function respon_location() {}
 
     // 未知消息
-    public function respon_unknown() {}
+    public function respon_unknown()
+    {
+        if (!$this->debug) {
+            return;
+        }
+
+        $template = "PHP 报错啦！\r\n\r\n出现未知的消息类型%s";
+
+        $content = sprintf($template, $this->request['event']);
+
+        $this->echoText($content);
+        exit;
+    }
 
     // 事件消息
     public function respon_event()
@@ -301,7 +313,19 @@ class Wechat
     public function respon_event_batch_job_result() {}
 
     // 未知事件
-    public function respon_event_unknown() {}
+    public function respon_event_unknown()
+    {
+        if (!$this->debug) {
+            return;
+        }
+
+        $template = "PHP 报错啦！\r\n\r\n出现未知的事件类型%s";
+
+        $content = sprintf($template, $this->request['event']);
+
+        $this->echoText($content);
+        exit;
+    }
 
     /**
      * 自定义的错误处理函数，将 PHP 错误通过文本消息回复显示
