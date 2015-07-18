@@ -172,7 +172,7 @@ class Wechat
         } else {
             $sEncryptMsg = $msg;
         }
-        exit($sEncryptMsg);
+        echo $sEncryptMsg;
     }
 
     /**
@@ -315,6 +315,7 @@ class Wechat
         $content = sprintf($template, $error_type[$level], $msg, $file, $line);
 
         $this->echoText($content);
+        exit;
     }
     /**
      * 处理函数调用异常
@@ -331,5 +332,6 @@ class Wechat
         $content = sprintf($template, $function_name, implode($args));
 
         $this->echoText($content);
+        exit;
     }
 }
