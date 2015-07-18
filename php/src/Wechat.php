@@ -56,6 +56,14 @@ class Wechat
      */
     private $timestamp, $nonce, $msg_signature;
 
+    /**
+     * 可接受的消息类型和事件类型数组
+     *
+     * @var array
+     */
+    protected $msgTypeArray   = array('text', 'image', 'voice', 'video', 'shortvideo', 'link', 'location', 'event');
+    protected $eventTypeArray = array('subscribe','unsubscribe','click','view','location','scan','scancode_push','scancode_waitmsg','pic_sysphoto','pic_photo_or_album','pic_weixin','location_select','enter_agent','batch_job_result');
+
 
     /**
      * 初始化，判断此次请求是否为验证请求，并以数组形式保存
@@ -207,7 +215,12 @@ class Wechat
       */
     public function run()
     {
-        eval('$this->respon_' . strtolower($this->request['msgtype']) . '();');
+        $msgType = strtolower($this->request['msgtype']);
+        if (in_array($msgType, $this->msgTypeArray)) {
+            eval('$this->respon_' . $msgType . '();');
+        } else {
+            $this->respon_unknown();
+        }
     }
 
     // 文本消息
@@ -231,10 +244,18 @@ class Wechat
     // 位置消息
     public function respon_location() {}
 
+    // 未知消息
+    public function respon_unknown() {}
+
     // 事件消息
     public function respon_event()
     {
-        eval('$this->respon_event_' . strtolower($this->request['event']) . '();');
+        $event = strtolower($this->request['event']);
+        if (in_array($event, $this->eventTypeArray)) {
+            eval('$this->respon_event_' . $event . '();');
+        } else {
+            $this->respon_event_unknown();
+        }
     }
 
     // 订阅事件（公众号、企业号）
@@ -278,6 +299,9 @@ class Wechat
 
     // 异步任务完成（企业号）
     public function respon_event_batch_job_result() {}
+
+    // 未知事件
+    public function respon_event_unknown() {}
 
     /**
      * 自定义的错误处理函数，将 PHP 错误通过文本消息回复显示
@@ -329,7 +353,7 @@ class Wechat
         }
         $template = "PHP 报错啦！\r\n\r\n函数%s不存在\r\n参数列表为：%s";
 
-        $content = sprintf($template, $function_name, implode($args));
+        $content = sprintf($template, $function_name, implode(',', $args));
 
         $this->echoText($content);
         exit;
