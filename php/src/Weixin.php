@@ -16,7 +16,7 @@ class Weixin
      *
      * @var string
      */
-    protected $appId,$appSecret;
+    protected $appId, $appSecret;
 
     /**
      * 消息类型
@@ -45,19 +45,20 @@ class Weixin
      * @param string $appID 应用ID
      * @param string $appSecret 应用密钥，可空
      * @param int    $wxType 微信类型，1：公众号；2：企业号
+     * @param int    $agentID 企业号应用ID，公众号请忽略
      */
-    public function __construct($appID, $appSecret='', $wxType=1)
+    public function __construct($appID, $appSecret='', $wxType=1, $agentID=-1)
     {
         $this->appID     = $appID;
         $this->appSecret = $appSecret;
         $this->wxType    = $wxType;
+        $this->agentID   = $agentID;
         $this->cache     = new Cache($appId);
     }
 
     /**
      * 设置缓存对象
      *
-     * 估计用不上，备用吧，以防万一(*^__^*) 
      * @param Cache $cache 缓存
      */
     public function setCache($cache)
@@ -68,7 +69,7 @@ class Weixin
     /**
      * 获取 AccessToken
      *
-     * @return string AccessToken
+     * @return string
      */
     public function getAccessToken()
     {
@@ -102,20 +103,98 @@ class Weixin
         return $this->accessToken;
     }
 
+    /**
+     * 获取自定义菜单
+     *
+     * @return array
+     */
     public function getMenu()
     {
+        $token = $this->getAccessToken();
+        if (empty($token)) return FALSE;
 
+        if ($this->wxType == 1) {
+            $url = "https://api.weixin.qq.com/cgi-bin/menu/get?access_token={$token}";
+        } else {
+            $url = "https://qyapi.weixin.qq.com/cgi-bin/menu/get?access_token={$token}&agentid={$this->agentID}";
+        }
+        return $this->getHttp($url, $menu);
     }
 
-    public function setMenu()
+    /**
+     * 获取设置菜单
+     *
+     * @param  array $menu 格式参考官方文档
+     * @return array 参考微信官方的返回结果
+     */
+    public function setMenu($menu)
     {
+        $token = $this->getAccessToken();
+        if (empty($token)) return FALSE;
 
+        if ($this->wxType == 1) {
+            $url = "https://api.weixin.qq.com/cgi-bin/menu/create?access_token={$token}";
+        } else {
+            $url = "https://qyapi.weixin.qq.com/cgi-bin/menu/create?access_token={$token}&agentid={$this->agentID}";
+        }
+        return $this->getHttp($url, json_encode($menu, JSON_UNESCAPED_UNICODE));
     }
 
+    /**
+     * 获取移除菜单
+     *
+     * @return array 参考微信官方的返回结果
+     */
     public function removeMenu()
     {
-        
+        $token = $this->getAccessToken();
+        if (empty($token)) return FALSE;
+
+        if ($this->wxType == 1) {
+            $url = "https://api.weixin.qq.com/cgi-bin/menu/delete?access_token={$token}";
+        } else {
+            $url = "https://qyapi.weixin.qq.com/cgi-bin/menu/delete?access_token={$token}&agentid={$this->agentID}";
+        }
+        return $this->getHttp($url);
     }
+    
+    /**
+     * 通过OpenID获取用户基本信息
+     *
+     * @param string $id 公众号是openID，企业号是userID
+     * @return array 参考微信官方的返回结果
+     */
+    public function getUserInfo($id)
+    {
+        $token = $this->getAccessToken();
+        if (empty($token)) return FALSE;
+        if ($this->wxType == 1) {
+            $url = "https://api.weixin.qq.com/cgi-bin/user/info?access_token={$token}&openid={$id}&lang=zh_CN";
+        } else {
+            $url = "https://qyapi.weixin.qq.com/cgi-bin/user/get?access_token={$token}&userid={$id}";
+        }
+        return $this->getHttp($url);
+    }
+
+    /**
+     * 主动发消息
+     *
+     * @param array $data 消息体，参考官方文档
+     * @return array 参考微信官方的返回结果
+     */
+    public function sendMsg($data)
+    {
+        $token = $this->getAccessToken();
+        if (empty($token)) return FALSE;
+
+        if ($this->wxType == 1) {
+            $url = "https://api.weixin.qq.com/cgi-bin/message/custom/send?access_token={$token}";
+        } else {
+            $url = "https://qyapi.weixin.qq.com/cgi-bin/message/send?access_token={$token}";
+        }
+        return $this->getHttp($url, json_encode($data));
+    }
+
 
     /**
      * 获取网页
@@ -138,6 +217,3 @@ class Weixin
         return $content;
     }
 }
-
-
-
