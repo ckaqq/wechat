@@ -44,16 +44,19 @@ class Weixin
      *
      * @param string $appID 应用ID
      * @param string $appSecret 应用密钥，可空
-     * @param int    $wxType 微信类型，1：公众号；2：企业号
-     * @param int    $agentID 企业号应用ID，公众号请忽略
+     * @param int    $agentID 企业号应用ID，公众号请勿填
      */
-    public function __construct($appID, $appSecret='', $wxType=1, $agentID=-1)
+    public function __construct($appID, $appSecret='', $agentID=-1)
     {
         $this->appID     = $appID;
         $this->appSecret = $appSecret;
-        $this->wxType    = $wxType;
-        $this->agentID   = $agentID;
-        $this->cache     = new Cache($appId);
+        if ($agentID == -1 || $agentID == "AGENTID") {
+            $wxType = 1;
+        } else {
+            $wxType = 2;
+            $this->agentID = $agentID;
+        }
+        $this->cache     = new Cache($appID);
     }
 
     /**
