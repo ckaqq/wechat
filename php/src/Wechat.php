@@ -71,7 +71,8 @@ class Wechat
      * @param string $token 验证信息
      * @param boolean $debug 调试模式，默认为关闭
      */
-    public function __construct($token, $aeskey = '', $appid = '', $debug = FALSE) {
+    public function __construct($token, $aeskey = '', $appid = '', $debug = FALSE) 
+    {
 
         $this->debug = $debug;
 
@@ -138,7 +139,8 @@ class Wechat
      * @param string $requestData 微信post的数据
      * @return void
      */
-    private function savePostData($requestData) {
+    private function savePostData($requestData) 
+    {
         
         if ($this->encrypted) {
             
@@ -190,7 +192,12 @@ class Wechat
       */
     public function echoText($text)
     {
-        $resultStr = sprintf($this->templateText, $this->request['fromusername'], $this->request['tousername'], time(), $text);
+        $resultStr = sprintf($this->templateText, 
+            $this->request['fromusername'], 
+            $this->request['tousername'], 
+            time(), 
+            trim($text)
+        );
         $this->echoMsg($resultStr);
     }
 
@@ -201,9 +208,19 @@ class Wechat
       */
     public function echoNews($items)
     {
-        $resultStr = sprintf($this->templateNewsBegin, $this->request['fromusername'], $this->request['tousername'], time(), count($item));
+        $resultStr = sprintf($this->templateNewsBegin, 
+            $this->request['fromusername'], 
+            $this->request['tousername'], 
+            time(), 
+            count($items)
+        );
         for ($i=0; $i<count($items); $i++) {
-            $resultStr .=  sprintf($this->templateNewsContent, $items[$i][0], $items[$i][1], $items[$i][2], $items[$i][3]);
+            $resultStr .=  sprintf($this->templateNewsContent, 
+                isset($items[$i][0])?trim($items[$i][0]):'', 
+                isset($items[$i][1])?trim($items[$i][1]):'', 
+                isset($items[$i][2])?trim($items[$i][1]):'', 
+                isset($items[$i][3])?trim($items[$i][1]):''
+            );
         }
         $resultStr .=  $this->templateNewsEnd;
         $this->echoMsg($resultStr);
