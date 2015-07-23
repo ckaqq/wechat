@@ -366,6 +366,9 @@ class Wechat
         if (!$this->debug) {
             return;
         }
+        if ($level == E_NOTICE) {
+            return;
+        }
 
         $error_type = array(
             // E_ERROR             => 'Error',
