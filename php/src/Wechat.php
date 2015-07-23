@@ -214,14 +214,24 @@ class Wechat
             time(), 
             count($items)
         );
-        for ($i=0; $i<count($items); $i++) {
+        if (count($items) == 1) {
             $resultStr .=  sprintf($this->templateNewsContent, 
-                isset($items[$i][0])?trim($items[$i][0]):'', 
-                isset($items[$i][1])?trim($items[$i][1]):'', 
-                isset($items[$i][2])?trim($items[$i][1]):'', 
-                isset($items[$i][3])?trim($items[$i][1]):''
+                isset($items[0][0])?trim($items[0][0]):'', 
+                isset($items[0][1])?trim($items[0][1]):'', 
+                isset($items[0][2])?trim($items[0][2]):'', 
+                isset($items[0][3])?trim($items[0][3]):''
             );
+        } else {
+            for ($i=0; $i<count($items); $i++) {
+                $resultStr .=  sprintf($this->templateNewsContent, 
+                    isset($items[$i][0])?trim($items[$i][0]):'', 
+                    '', 
+                    isset($items[$i][1])?trim($items[$i][1]):'', 
+                    isset($items[$i][2])?trim($items[$i][2]):''
+                );
+            }
         }
+        
         $resultStr .=  $this->templateNewsEnd;
         $this->echoMsg($resultStr);
     }
