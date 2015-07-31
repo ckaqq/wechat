@@ -1,2 +1,3 @@
 #忽略配置文件和调试文件
 php/*.php
+nodejs/*.js
