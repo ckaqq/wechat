@@ -64,6 +64,12 @@ class Wechat
     protected $msgTypeArray   = array('text', 'image', 'voice', 'video', 'shortvideo', 'link', 'location', 'event');
     protected $eventTypeArray = array('subscribe','unsubscribe','click','view','location','scan','scancode_push','scancode_waitmsg','pic_sysphoto','pic_photo_or_album','pic_weixin','location_select','enter_agent','batch_job_result');
 
+    /**
+     * 关键字
+     *
+     * @var string
+     */
+    public $keyword = '';
 
     /**
      * 初始化，判断此次请求是否为验证请求，并以数组形式保存
@@ -77,8 +83,8 @@ class Wechat
         $this->debug = $debug;
 
         // 获取请求参数
-        $this->timestamp     = $_GET['timestamp'];
-        $this->nonce         = $_GET['nonce'];
+        $this->timestamp = isset($_GET['timestamp']) ? $_GET['timestamp'] : '';
+        $this->nonce     = isset($_GET['nonce']) ? $_GET['nonce'] : '';
         if (!$this->debug && (empty($this->timestamp) || empty($this->nonce))) {
             exit("请通过微信访问");
         }
@@ -243,10 +249,39 @@ class Wechat
     public function run()
     {
         $msgType = strtolower($this->request['msgtype']);
-        if (in_array($msgType, $this->msgTypeArray)) {
-            eval('$this->respon_' . $msgType . '();');
-        } else {
-            $this->respon_unknown();
+        switch ($msgType) {
+            case 'text':
+                $this->keyword = $this->request["content"];
+                $this->respon_text();
+                break;
+            case 'image':
+                $this->keyword = $this->request["picurl"];
+                $this->respon_image();
+                break;
+            case 'voice':
+                $this->keyword = $this->request["recognition"];
+                $this->respon_voice();
+                break;
+            case 'video':
+                $this->respon_video();
+                break;
+            case 'shortvideo':
+                $this->respon_shortvideo();
+                break;
+            case 'link':
+                $this->keyword = $this->request["url"];
+                $this->respon_link();
+                break;
+            case 'location':
+                $this->keyword = $this->request["location_x"] . "," . $this->request["location_y"];
+                $this->respon_location();
+                break;
+            case 'event':
+                $this->respon_event();
+                break;
+            default:
+                $this->respon_unknown();
+                break;
         }
     }
 
