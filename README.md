@@ -8,3 +8,6 @@
 3. 微信后台URl填上 example/example.php 的URL
 4. 仿照 MyWecaht 的样例进行方法重写即可
 
+###nojde
+
+1. 使用npm安装模块 node-xml

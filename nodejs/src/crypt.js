@@ -1,7 +1,6 @@
 var crypto = require('crypto');
-var token = 'weixin';
 
-exports.mpVerifySig = function (signature, timestamp, nonce) {
+exports.mpVerifySig = function (token, signature, timestamp, nonce) {
     var arr = new Array(token, timestamp, nonce);
     arr.sort();
     var sha1 = crypto.createHash('sha1');
