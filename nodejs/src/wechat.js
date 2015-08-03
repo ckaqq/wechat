@@ -1,15 +1,46 @@
-var crypt = require('./crypt');
-var xml = require("node-xml");
-var querystring = require('querystring');
 var url = require('url');
+var xml = require("node-xml");
 var http = require('http');
-var config = {};
-var data = '';
+var func = require('./function');
+var crypt = require('./crypt');
+var querystring = require('querystring');
 
-// 解析xml
+// 配置
+var config = {};
+// POST内容
+var data = '';
+// 请求内容
+var request = {};
+
+// 解析xml要用的临时变量
 var result = {};
 var tempName = "";
-var parser = new xml.SaxParser(function(cb){
+
+// xml模板字符串
+var templateText        = "<xml><ToUserName><![CDATA[%s]]></ToUserName><FromUserName><![CDATA[%s]]></FromUserName><CreateTime>%s</CreateTime><MsgType><![CDATA[text]]></MsgType><Content><![CDATA[%s]]></Content></xml>";
+var templateNewsBegin   = "<xml><ToUserName><![CDATA[%s]]></ToUserName><FromUserName><![CDATA[%s]]></FromUserName><CreateTime>%s</CreateTime><MsgType><![CDATA[news]]></MsgType><ArticleCount>%s</ArticleCount><Articles>";
+var templateNewsContent = "<item><Title><![CDATA[%s]]></Title><Description><![CDATA[%s]]></Description><PicUrl><![CDATA[%s]]></PicUrl><Url><![CDATA[%s]]></Url></item>";
+var templateNewsEnd     = "</Articles></xml>";
+
+// 构造函数
+start = function(conf) {
+    config = conf;
+    http.createServer(function(req, res){
+        if (req.method == "GET") {
+            wechat(req, res);
+        } else if (req.method == "POST") {
+            req.on("data", function(datas){
+                data += datas;
+            }).on("end", function(){
+                wechat(req, res);
+            });
+        }
+    }).listen(config['port']);
+    console.log("Wechat start listen " + config['port'] + " port");
+}
+
+// 解析xml
+var parser = new xml.SaxParser(function(cb) {
     cb.onStartDocument(function () {});
     cb.onEndDocument(function () {});
     cb.onStartElementNS(function (elem, attrs, prefix, uri, namespaces) {
@@ -51,27 +82,27 @@ var wechat = function (req, res) {
     if (echostr) {
         res.end(echostr);
     }
-    result = {};
-    parser.parseString(data);
-    var msg = "<xml><ToUserName><![CDATA[" + result['FromUserName'] + "]]></ToUserName>" +
-        "<FromUserName><![CDATA[" + result['ToUserName'] + "]]></FromUserName>" +
-        "<CreateTime>" + result['CreateTime'] + "</CreateTime><MsgType><![CDATA[text]]></MsgType>" +
-        "<Content><![CDATA[" + "你刚才说的是：" + result['Content'] + "]]></Content></xml>";
+    savePostData(encrypted);
+    var msg = func.sprintf(
+        templateText,
+        request['fromusername'],
+        request['tousername'],
+        request['createtime'],
+        "你刚才说的是：" + request['content']
+    );
     res.end(msg);
 };
 
-exports.start = function(conf) {
-    config = conf;
-    http.createServer(function(req, res){
-        if (req.method == "GET") {
-            wechat(req, res);
-        } else if (req.method == "POST") {
-            req.on("data", function(datas){
-                data += datas;
-            }).on("end", function(){
-                wechat(req, res);
-            });
-        }
-    }).listen(config['port']);
-    console.log("Wechat start listen " + config['port'] + " port");
-}
+var savePostData = function(encrypted){
+    result = {};
+    parser.parseString(data);
+    if (encrypted) {
+        // 解密消息体，待开发
+    }
+    // 将数组键名转换为小写，提高健壮性，减少因大小写不同而出现的问题
+    for (var key in result) {
+        request[key.toLowerCase] = result[key];
+    };
+};
+
+exports.start = start;
