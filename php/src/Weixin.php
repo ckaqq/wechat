@@ -198,6 +198,97 @@ class Weixin
         return $this->getHttp($url, json_encode($data));
     }
 
+    /**
+     * 获取OAuth的网址
+     *
+     * @param string $redirect_url 授权后重定向的回调链接地址
+     * @param string $state 重定向后会带上的state参数
+     * @return string OAut地址
+     */
+    public function getOauthUrl($redirect_url, $state="")
+    {
+        $redirect_url = urlencode($redirect_url);
+        $url = "https://open.weixin.qq.com/connect/oauth2/authorize?appid={$this->appID}&redirect_uri={$url}&response_type=code&scope=snsapi_base&state={$state}#wechat_redirect";
+        return $url;
+    }
+
+    /**
+     * 获取OAuth的结果
+     *
+     * 用户同意授权后，企业号通过code获取到用户USERID，公众号通过code换取网页授权access_token
+     * @param string $code 通过授权获取到的code
+     * @return array 参考微信官方的返回结果
+     */
+    public function getOauthResult($code)
+    {
+        $token = $this->getAccessToken();
+        if (empty($token)) return FALSE;
+        if ($this->wxType == 1) {
+            $url = "https://api.weixin.qq.com/sns/oauth2/access_token?appid={$this->appID}&secret={$this->appSecret}&code={$code}&grant_type=authorization_code";
+        } else {
+            $url = "https://qyapi.weixin.qq.com/cgi-bin/user/getuserinfo?access_token={$token}&code={$code}";
+        }
+        $result = $this->getHttp($url);
+        $json = json_decode($result, TRUE);
+        // 缓存oauth_token
+        if ($this->wxType == 1 && $json['access_token']) {
+            $this->cache->set('oauth_token', $json['access_token'], $json['expires_in']);
+        }
+        return $result;
+    }
+
+    /**
+     * 刷新oauth_token（如果需要）
+     *
+     * 仅限公众号
+     * @param string $oauth_token oauth_token，如果为空则从缓存中取
+     * @return boolean 结果
+     */
+    public function refreshOauthToken($oauth_token = '')
+    {
+        if (!$oauth_token) $oauth_token = $this->cache->get('oauth_token');
+        if (!$oauth_token) return FALSE;
+        $url = "https://api.weixin.qq.com/sns/oauth2/refresh_token?appid={$this->appID}&grant_type=refresh_token&refresh_token={$oauth_token}";
+        $array = json_decode($this->getHttp($url), TRUE);
+        if ($array['access_token'] && $array['expires_in']) {
+            $this->cache->set('oauth_token', $array['access_token'], $array['expires_in']);
+            return TRUE;
+        } else {
+            return FALSE;
+        }
+    }
+
+    /**
+     * 验证oauth_token是否有效
+     *
+     * 仅限公众号
+     * @param string $openid 用户ID
+     * @param string $oauth_token 网页授权token，如果为空则从缓存中取
+     * @return array 参考微信官方的返回结果
+     */
+    public function varifyOauthToken($openid, $oauth_token = '')
+    {
+        if (!$oauth_token) $oauth_token = $this->cache->get('oauth_token');
+        if (!$oauth_token) return FALSE;
+        $url = "https://api.weixin.qq.com/sns/auth?access_token={$oauth_token}&openid={$openid}";
+        return $this->getHttp($url);
+    }
+
+    /**
+     * 拉取用户信息
+     *
+     * 仅限公众号，企业号请通过getUserInfo获取用户信息
+     * @param string $openid 用户ID
+     * @param string $oauth_token 网页授权token，如果为空则从缓存中取
+     * @return array 参考微信官方的返回结果
+     */
+    public function getOauthInfo($openid, $oauth_token="")
+    {
+        if (!$oauth_token) $oauth_token = $this->cache->get('oauth_token');
+        if (!$oauth_token) return FALSE;
+        $url = "https://api.weixin.qq.com/sns/userinfo?access_token={$oauth_token}&openid={$openid}&lang=zh_CN";
+        return $this->getHttp($url);
+    }
 
     /**
      * 获取网页
