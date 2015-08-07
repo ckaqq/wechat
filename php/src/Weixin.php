@@ -121,7 +121,7 @@ class Weixin
         } else {
             $url = "https://qyapi.weixin.qq.com/cgi-bin/menu/get?access_token={$token}&agentid={$this->agentID}";
         }
-        return $this->getHttp($url, $menu);
+        return json_decode($this->getHttp($url, $menu), TRUE);
     }
 
     /**
@@ -140,7 +140,7 @@ class Weixin
         } else {
             $url = "https://qyapi.weixin.qq.com/cgi-bin/menu/create?access_token={$token}&agentid={$this->agentID}";
         }
-        return $this->getHttp($url, json_encode($menu, JSON_UNESCAPED_UNICODE));
+        return json_decode($this->getHttp($url, json_encode($menu, JSON_UNESCAPED_UNICODE)), TRUE);
     }
 
     /**
@@ -158,7 +158,7 @@ class Weixin
         } else {
             $url = "https://qyapi.weixin.qq.com/cgi-bin/menu/delete?access_token={$token}&agentid={$this->agentID}";
         }
-        return $this->getHttp($url);
+        return json_decode($this->getHttp($url), TRUE);
     }
     
     /**
@@ -176,7 +176,7 @@ class Weixin
         } else {
             $url = "https://qyapi.weixin.qq.com/cgi-bin/user/get?access_token={$token}&userid={$id}";
         }
-        return $this->getHttp($url);
+        return json_decode($this->getHttp($url), TRUE);
     }
 
     /**
@@ -195,7 +195,7 @@ class Weixin
         } else {
             $url = "https://qyapi.weixin.qq.com/cgi-bin/message/send?access_token={$token}";
         }
-        return $this->getHttp($url, json_encode($data));
+        return json_decode($this->getHttp($url, json_encode($data)), TRUE);
     }
 
     /**
@@ -208,7 +208,7 @@ class Weixin
     public function getOauthUrl($redirect_url, $state="")
     {
         $redirect_url = urlencode($redirect_url);
-        $url = "https://open.weixin.qq.com/connect/oauth2/authorize?appid={$this->appID}&redirect_uri={$url}&response_type=code&scope=snsapi_base&state={$state}#wechat_redirect";
+        $url = "https://open.weixin.qq.com/connect/oauth2/authorize?appid={$this->appID}&redirect_uri={$redirect_url}&response_type=code&scope=snsapi_base&state={$state}#wechat_redirect";
         return $url;
     }
 
@@ -234,7 +234,7 @@ class Weixin
         if ($this->wxType == 1 && $json['access_token']) {
             $this->cache->set('oauth_token', $json['access_token'], $json['expires_in']);
         }
-        return $result;
+        return $json;
     }
 
     /**
@@ -271,7 +271,7 @@ class Weixin
         if (!$oauth_token) $oauth_token = $this->cache->get('oauth_token');
         if (!$oauth_token) return FALSE;
         $url = "https://api.weixin.qq.com/sns/auth?access_token={$oauth_token}&openid={$openid}";
-        return $this->getHttp($url);
+        return json_decode($this->getHttp($url), TRUE);
     }
 
     /**
@@ -287,7 +287,7 @@ class Weixin
         if (!$oauth_token) $oauth_token = $this->cache->get('oauth_token');
         if (!$oauth_token) return FALSE;
         $url = "https://api.weixin.qq.com/sns/userinfo?access_token={$oauth_token}&openid={$openid}&lang=zh_CN";
-        return $this->getHttp($url);
+        return json_decode($this->getHttp($url), TRUE);
     }
 
     /**
