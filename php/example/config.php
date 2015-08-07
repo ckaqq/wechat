@@ -7,4 +7,5 @@ define('ENCODINGAESKEY', '你的ENCODINGAESKEY'); // 公众号明文模式可不
 // 调试模式
 define('DEBUG', FALSE);
 
-
+define('SECRET', '你的APPSECRET'); // 秘钥，个别功能必备
+define('AGENTID', 2); // 企业号应用ID，公众号请忽略

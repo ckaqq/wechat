@@ -1,13 +1,20 @@
 <?php
 
 require_once __DIR__ . '/../src/Wechat.php';
+require_once __DIR__ . '/../src/Weixin.php';
 require_once __DIR__ . '/config.php';
 
 class MyWechat extends Wechat
 {
+    // 构造函数
+    public function __construct($token, $aeskey, $appid, $debug=FALSE, $srcret='', $agentID=-1)
+    {
+        parent::__construct($token, $aeskey, $appid, $debug);
+        $this->weixin = new Weixin($appid, $srcret, $agentID);
+    }
 
     // 关注测试
-    function respon_event_subscribe()
+    public function respon_event_subscribe()
     {
         $this->echoText("你来啦");
     }
@@ -25,5 +32,5 @@ class MyWechat extends Wechat
     }
 }
 
-$wechat = new MyWechat(TOKEN, ENCODINGAESKEY, APPID, DEBUG);
+$wechat = new MyWechat(TOKEN, ENCODINGAESKEY, APPID, DEBUG, SECRET, AGENTID);
 $wechat->run();
