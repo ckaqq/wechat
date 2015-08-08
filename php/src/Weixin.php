@@ -51,9 +51,9 @@ class Weixin
         $this->appID     = $appID;
         $this->appSecret = $appSecret;
         if ($agentID == -1 || $agentID == "AGENTID") {
-            $wxType = 1;
+            $this->wxType = 1;
         } else {
-            $wxType = 2;
+            $this->wxType = 2;
             $this->agentID = $agentID;
         }
         $this->cache     = new Cache($appID);
