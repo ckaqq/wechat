@@ -20,6 +20,7 @@ class Wechat
     protected $templateNewsBegin   = "<xml><ToUserName><![CDATA[%s]]></ToUserName><FromUserName><![CDATA[%s]]></FromUserName><CreateTime>%s</CreateTime><MsgType><![CDATA[news]]></MsgType><ArticleCount>%s</ArticleCount><Articles>";
     protected $templateNewsContent = "<item><Title><![CDATA[%s]]></Title><Description><![CDATA[%s]]></Description><PicUrl><![CDATA[%s]]></PicUrl><Url><![CDATA[%s]]></Url></item>";
     protected $templateNewsEnd     = "</Articles></xml>";
+    protected $templatecustomer    = "<xml><ToUserName><![CDATA[%s]]></ToUserName><FromUserName><![CDATA[%s]]></FromUserName><CreateTime>%s</CreateTime><MsgType><![CDATA[transfer_customer_service]]></MsgType></xml>";
 
     /**
      * 调试模式，将错误通过文本消息回复显示
@@ -239,6 +240,21 @@ class Wechat
         }
         
         $resultStr .=  $this->templateNewsEnd;
+        $this->echoMsg($resultStr);
+    }
+
+    /**
+      * 将消息转接到多客服
+      *
+      * @return void
+      */
+    public function echoCustomer()
+    {
+        $resultStr = sprintf($this->templatecustomer, 
+            $this->request['fromusername'], 
+            $this->request['tousername'], 
+            time()
+        );
         $this->echoMsg($resultStr);
     }
 
