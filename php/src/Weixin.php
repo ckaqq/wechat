@@ -195,7 +195,7 @@ class Weixin
         } else {
             $url = "https://qyapi.weixin.qq.com/cgi-bin/message/send?access_token={$token}";
         }
-        return json_decode($this->getHttp($url, json_encode($data)), TRUE);
+        return json_decode($this->getHttp($url, json_encode($data, JSON_UNESCAPED_UNICODE)), TRUE);
     }
 
     /**
