@@ -341,10 +341,54 @@ class Wechat
     public function respon_event()
     {
         $event = strtolower($this->request['event']);
-        if (in_array($event, $this->eventTypeArray)) {
-            eval('$this->respon_event_' . $event . '();');
-        } else {
-            $this->respon_event_unknown();
+        switch ($event) {
+            case 'subscribe':
+                $this->respon_event_subscribe();
+                break;
+            case 'unsubscribe':
+                $this->respon_event_unsubscribe();
+                break;
+            case 'click':
+                $this->keyword = $this->request["eventkey"];
+                $this->respon_event_click();
+                break;
+            case 'view':
+                $this->keyword = $this->request["eventkey"];
+                $this->respon_event_view();
+                break;
+            case 'location':
+                $this->respon_event_location();
+                break;
+            case 'scan':
+                $this->respon_event_scan();
+                break;
+            case 'scancode_push':
+                $this->respon_event_scancode_push();
+                break;
+            case 'scancode_waitmsg':
+                $this->respon_event_scancode_waitmsg();
+                break;
+            case 'pic_sysphoto':
+                $this->respon_event_pic_sysphoto();
+                break;
+            case 'pic_photo_or_album':
+                $this->respon_event_pic_photo_or_album();
+                break;
+            case 'pic_weixin':
+                $this->respon_event_pic_weixin();
+                break;
+            case 'location_select':
+                $this->respon_event_location_select();
+                break;
+            case 'enter_agent':
+                $this->respon_event_enter_agent();
+                break;
+            case 'batch_job_result':
+                $this->respon_event_batch_job_result();
+            
+            default:
+                $this->respon_event_unknown();
+                break;
         }
     }
 
