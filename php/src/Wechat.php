@@ -20,7 +20,8 @@ class Wechat
     protected $templateNewsBegin   = "<xml><ToUserName><![CDATA[%s]]></ToUserName><FromUserName><![CDATA[%s]]></FromUserName><CreateTime>%s</CreateTime><MsgType><![CDATA[news]]></MsgType><ArticleCount>%s</ArticleCount><Articles>";
     protected $templateNewsContent = "<item><Title><![CDATA[%s]]></Title><Description><![CDATA[%s]]></Description><PicUrl><![CDATA[%s]]></PicUrl><Url><![CDATA[%s]]></Url></item>";
     protected $templateNewsEnd     = "</Articles></xml>";
-    protected $templatecustomer    = "<xml><ToUserName><![CDATA[%s]]></ToUserName><FromUserName><![CDATA[%s]]></FromUserName><CreateTime>%s</CreateTime><MsgType><![CDATA[transfer_customer_service]]></MsgType></xml>";
+    protected $templateCustomer    = "<xml><ToUserName><![CDATA[%s]]></ToUserName><FromUserName><![CDATA[%s]]></FromUserName><CreateTime>%s</CreateTime><MsgType><![CDATA[transfer_customer_service]]></MsgType></xml>";
+    protected $templateImage       = "<xml><ToUserName><![CDATA[%s]]></ToUserName><FromUserName><![CDATA[%s]]></FromUserName><CreateTime>%s</CreateTime><MsgType><![CDATA[image]]></MsgType><Image><MediaId><![CDATA[%s]]></MediaId></Image></xml>";
 
     /**
      * 调试模式，将错误通过文本消息回复显示
@@ -242,6 +243,16 @@ class Wechat
         $resultStr .=  $this->templateNewsEnd;
         $this->echoMsg($resultStr);
     }
+    public function echoImg($image)
+    {
+        $resultStr = sprintf($this->templateImage,
+            $this->request['fromusername'], 
+            $this->request['tousername'], 
+            time(),
+            $image
+        );
+        $this->echoMsg($resultStr);
+    }
 
     /**
       * 将消息转接到多客服
@@ -250,7 +261,7 @@ class Wechat
       */
     public function echoCustomer()
     {
-        $resultStr = sprintf($this->templatecustomer, 
+        $resultStr = sprintf($this->templateCustomer, 
             $this->request['fromusername'], 
             $this->request['tousername'], 
             time()
