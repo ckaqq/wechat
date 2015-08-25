@@ -289,6 +289,44 @@ class Weixin
         $url = "https://api.weixin.qq.com/sns/userinfo?access_token={$oauth_token}&openid={$openid}&lang=zh_CN";
         return json_decode($this->getHttp($url), TRUE);
     }
+    /**
+     * 上传其他类型永久素材
+     *
+     * 注：图文尚未测试，暂不支持临时素材
+     * @param string $type 素材类型，有图文（news）、图片（image）、语音（voice）、视频（video）和缩略图（thumb）
+     * @param string $data 上传的素材内容
+     * @param boolean $time 素材是否未永久报酬，默认为永久
+     * @return array 参考微信官方的返回结果
+     */
+    public function upload($type, $data, $time=TRUE)
+    {
+        $token = $this->getAccessToken();
+        if (empty($token)) return FALSE;
+        // 永久素材
+        if ($time == TRUE) {
+            if ($this->wxType == 1) {
+                if ($type == 'news') {
+                    $url = "https://api.weixin.qq.com/cgi-bin/material/add_news?access_token={$token}";
+                    $post = $data;
+                } else {
+                    $url = "https://api.weixin.qq.com/cgi-bin/material/add_material?access_token={$token}&type={$type}";
+                    $post['media'] = '@'.$data;
+                }
+            } else {
+                if ($type == 'news') {
+                    $url = "https://qyapi.weixin.qq.com/cgi-bin/material/add_mpnews?access_token={$token}";
+                    $post = $data;
+                } else {
+                    $url = "https://qyapi.weixin.qq.com/cgi-bin/material/add_material?agentid={$this->agentID}&type={$type}&access_token={$token}";
+                    $post['media'] = '@'.$data;
+                }
+            }
+        // 临时素材，等待完成
+        } else {
+        }
+        $result = $this->getHttp($url, $post);
+        return json_decode($result, TRUE);
+    }
 
     /**
      * 获取网页
