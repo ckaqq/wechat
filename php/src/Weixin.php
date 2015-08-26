@@ -289,6 +289,7 @@ class Weixin
         $url = "https://api.weixin.qq.com/sns/userinfo?access_token={$oauth_token}&openid={$openid}&lang=zh_CN";
         return json_decode($this->getHttp($url), TRUE);
     }
+
     /**
      * 上传其他类型永久素材
      *
@@ -324,6 +325,25 @@ class Weixin
         // 临时素材，等待完成
         } else {
         }
+        $result = $this->getHttp($url, $post);
+        return json_decode($result, TRUE);
+    }
+
+    /**
+     * 发送模板消息
+     *
+     * 仅限公众号
+     * @param array $data 消息体，参考官方文档
+     * @return array 参考微信官方的返回结果
+     */
+    public function sendTemplate($data)
+    {
+        $token = $this->getAccessToken();
+        if (empty($token)) return FALSE;
+
+        $url = "https://api.weixin.qq.com/cgi-bin/message/template/send?access_token={$token}";
+        $post = json_encode($data, JSON_UNESCAPED_UNICODE);
+
         $result = $this->getHttp($url, $post);
         return json_decode($result, TRUE);
     }

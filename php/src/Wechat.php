@@ -396,6 +396,9 @@ class Wechat
                 break;
             case 'batch_job_result':
                 $this->respon_event_batch_job_result();
+            case 'templatesendjobfinish':
+                $this->respon_event_templatesendjobfinish();
+                break;
             
             default:
                 $this->respon_event_unknown();
@@ -444,6 +447,9 @@ class Wechat
 
     // 异步任务完成（企业号）
     public function respon_event_batch_job_result() {}
+
+    // 模板消息的事件推送（公众号）
+    public function respon_event_templatesendjobfinish() {}
 
     // 未知事件
     public function respon_event_unknown()
