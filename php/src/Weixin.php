@@ -82,7 +82,7 @@ class Weixin
         }
 
         // 从缓存里取
-        $token = $this->cache->get('accessToken');
+        $token = $this->cache->get('access_token');
         if (!empty($token)) {
             $this->accessToken = $token;
             return $this->accessToken;
