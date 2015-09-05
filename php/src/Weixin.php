@@ -50,7 +50,7 @@ class Weixin
     {
         $this->appID     = $appID;
         $this->appSecret = $appSecret;
-        if ($agentID == -1 || $agentID == "AGENTID") {
+        if ($agentID == -1 || $agentID === "AGENTID") {
             $this->wxType = 1;
         } else {
             $this->wxType = 2;
