@@ -10,7 +10,7 @@ namespace Wechat;
 
 require_once __DIR__ . '/src/Wechat.php';
 
-class TpWechat extends \Wechat
+class Wechat extends \Wechat
 {
     // 构造函数
     public function __construct($token, $aeskey, $appid, $debug=FALSE, $srcret='', $agentID=-1)

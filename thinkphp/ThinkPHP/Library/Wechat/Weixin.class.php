@@ -10,4 +10,4 @@ namespace Wechat;
 
 require_once __DIR__ . '/src/Weixin.php';
 
-class TpWeixin extends \Weixin{}
+class Weixin extends \Weixin{}
