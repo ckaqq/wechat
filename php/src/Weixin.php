@@ -50,7 +50,7 @@ class Weixin
     {
         $this->appID     = $appID;
         $this->appSecret = $appSecret;
-        if ($agentID == -1 || $agentID == "AGENTID") {
+        if ($agentID == -1 || $agentID === "AGENTID") {
             $this->wxType = 1;
         } else {
             $this->wxType = 2;
@@ -82,7 +82,7 @@ class Weixin
         }
 
         // 从缓存里取
-        $token = $this->cache->get('accessToken');
+        $token = $this->cache->get('access_token');
         if (!empty($token)) {
             $this->accessToken = $token;
             return $this->accessToken;
