@@ -1,5 +1,6 @@
 #忽略配置文件和调试文件
 /php/*.php
+/php/*.jpg
 /nodejs/*.js
 /nodejs/*.json
 /nodejs/node_modules/
