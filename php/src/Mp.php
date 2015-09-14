@@ -57,6 +57,38 @@ class Mp
     }
 
     /**
+     * 设置分组
+     *
+     * @param string $fakeid 用户id
+     * @param string $group 分组id
+     * @return boolean 结果
+     */
+    public function setGroup($fakeid, $group)
+    {
+        $url = "https://mp.weixin.qq.com/cgi-bin/modifycontacts?action=modifycontacts&t=ajax-putinto-group";
+        $post = "token={$this->token}&lang=zh_CN&f=json&ajax=1&random=0.".rand(100000000,999999999)."&scene=2&contacttype={$group}&tofakeidlist=".$fakeid;
+        $referer = "https://mp.weixin.qq.com/cgi-bin/contactmanage?t=user/index&pageidx=0&type=0&token={$this->token}&lang=zh_CN";
+        $html = $this->curl($url, $post, $referer);
+        $array = json_decode($html, TRUE);
+        return $array['base_resp']['err_msg'] == 'ok';
+    }
+
+    /**
+     * 获取分组列表
+     *
+     * @return array
+     */
+    public function getGroupList()
+    {
+        $url = "https://mp.weixin.qq.com/cgi-bin/contactmanage?t=user/index&pagesize=20&pageidx=0&type=0&token={$this->token}&lang=zh_CN";
+        $html = $this->curl($url);
+        $pattern = '/groups":(.*?)\}\)\.groups/';
+        preg_match_all($pattern, $html, $match);
+        $array = json_decode($match[1][0], TRUE);
+        return $array;
+    }
+
+    /**
      * 获取用户信息
      *
      * @param string $fakeid 用户id
@@ -188,11 +220,16 @@ class Mp
      *
      * @return array
      */
-    public function getUserList($num = -1)
+    public function getUserList($num=-1, $group=-1)
     {
         $result = array();
         if ($num < 0) {
             $num = $this->info[1];
+        }
+        if ($group != -1) {
+            $group = "&groupid=" . $group;
+        } else {
+            $group = '';
         }
 
         // 计算抓取的次数和每次抓取的个数
@@ -206,7 +243,7 @@ class Mp
 
         // 分批次抓取
         for ($i=0; $i < $cnt; $i++) { 
-            $url = "https://mp.weixin.qq.com/cgi-bin/contactmanage?t=user/index&pagesize={$size}&pageidx={$i}&type=0&token={$this->token}&lang=zh_CN";
+            $url = "https://mp.weixin.qq.com/cgi-bin/contactmanage?t=user/index&pagesize={$size}&pageidx={$i}&type=0&token={$this->token}&lang=zh_CN" . $group;
             $html = $this->curl($url);
             preg_match_all('/"contacts":(.*?)\}\)\.contacts,/', $html, $match);
             $array = json_decode($match[1][0], TRUE);
