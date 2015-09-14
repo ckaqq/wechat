@@ -6,6 +6,9 @@
  * @version 1.0
  */
 require_once __DIR__ . '/Cache.php';
+require_once __DIR__ . '/../libraries/qiniu/autoload.php';
+use Qiniu\Auth;
+use Qiniu\Storage\UploadManager;
 
 class Mp
 {
@@ -16,25 +19,30 @@ class Mp
      */
     private $cookie_str, $token;
 
-    public $msg;
+    private $qiniuToken;
+
+    public $info;
 
     /**
      * 初始化
      *
      * @param string $account 账号
      * @param string $passwd  密码
+     * @param string $cacheType  缓存类型
+     * @param string $cacheOption  缓存配置
      */
-    public function __construct($account, $passwd)
+    public function __construct($account, $passwd, $cacheType=0, $cacheOption=array())
     {
-        $this->cache = new Cache($account);
+        $this->cache = new Cache($account, $cacheType, $cacheOption);
         // 读缓存
         $this->token = $this->cache->get('token');
         $this->cookie_str = $this->cache->get('cookie_str');
         if (!empty($this->token) && !empty($this->cookie_str)) {
-            if ($this->getMsg()) {
+            if ($this->getInfo()) {
                 return;
             }
         }
+        
         $this->login($account, $passwd);
     }
 
@@ -49,11 +57,28 @@ class Mp
     }
 
     /**
+     * 获取用户列表
+     *
+     * @return array
+     */
+    public function getUserList($num = -1)
+    {
+        if ($num < 0) {
+            $num = $this->info[1];
+        }
+        $url = "https://mp.weixin.qq.com/cgi-bin/contactmanage?t=user/index&pagesize={$num}&pageidx=0&type=0&token={$this->token}&lang=zh_CN";
+        $html = $this->curl($url);
+        preg_match_all('/"contacts":(.*?)\}\)\.contacts,/', $html, $match);
+        $array = json_decode($match[1][0], TRUE);
+        return $array;
+    }
+
+    /**
      * 获取未读消息、新增用户数、用户总数
      *
      * @return array
      */
-    public function getMsg()
+    public function getInfo()
     {
         $url = "https://mp.weixin.qq.com/cgi-bin/home?t=home/index&lang=zh_CN&token=" . $this->token;
         $html = $this->curl($url);
@@ -61,7 +86,7 @@ class Mp
             return "";
         }
         preg_match_all('/<em class="number">(.*?)<\/em>/', $html, $match);
-        $this->msg = $match[1];
+        $this->info = $match[1];
         return $match[1];
     }
 
@@ -73,6 +98,7 @@ class Mp
      */
     public function login($account, $passwd)
     {
+        echo "登陆";
         // 尝试登陆
         $ch = curl_init();
         curl_setopt($ch, CURLOPT_URL, "https://mp.weixin.qq.com/cgi-bin/login");
@@ -100,8 +126,8 @@ class Mp
         $this->cache->set('cookie_str', $this->cookie_str);
 
         // 获取信息以验证是否真正登陆成功
-        $this->msg = $this->getMsg();
-        return !empty($this->msg);
+        $this->info = $this->getInfo();
+        return !empty($this->info);
     }
 
     /**
