@@ -74,6 +74,51 @@ class Mp
     }
 
     /**
+     * 获取消息列表
+     *
+     * @param int $num 消息数量
+     * @return int
+     */
+    public function getMessageList($num=-1)
+    {
+        $result = array();
+        if ($num < 0) {
+            $num = $this->info[0];
+        }
+        
+        // 获取最新的消息id
+        $latest_msg_id = $this->getLatestMsgId();
+        
+        // 分批次获取消息内容
+        for ($i=0; $i < $num; $i+=50) { 
+            $html = $this->curl("https://mp.weixin.qq.com/cgi-bin/message?t=message/list&action=&keyword=&frommsgid={$latest_msg_id}&offset={$i}&count=50&day=7&filterivrmsg=&token={$this->token}&lang=zh_CN");
+            $pattern = '/"msg_item":(.*?)\}\)\.msg_item,/';
+            preg_match_all($pattern, $html, $match);
+            $array = json_decode($match[1][0], TRUE);
+            $result = array_merge($result, $array);
+        }
+
+        // 多余的删掉
+        while(count($result) > $num)
+            array_pop($result);
+        return $result;
+    }
+
+    /**
+     * 获取最新的消息id
+     *
+     * @return int
+     */
+    public function getLatestMsgId()
+    {
+        $url = "https://mp.weixin.qq.com/cgi-bin/message?t=message/list&count=20&day=7&token={$this->token}&lang=zh_CN";
+        $html = $this->curl($url);
+        $pattern = "/latest_msg_id : '(.*?)'/";
+        preg_match_all($pattern, $html, $match);
+        return $match[1][0];
+    }
+
+    /**
      * 获取用户信息
      *
      * @param string $fakeid 用户id
@@ -149,6 +194,8 @@ class Mp
         if ($num < 0) {
             $num = $this->info[1];
         }
+
+        // 计算抓取的次数和每次抓取的个数
         $size = $num;
         $cnt = 1;
         while ($size > 5000) {
@@ -156,6 +203,8 @@ class Mp
             $cnt *= 2;
         }
         $size = ceil($size);
+
+        // 分批次抓取
         for ($i=0; $i < $cnt; $i++) { 
             $url = "https://mp.weixin.qq.com/cgi-bin/contactmanage?t=user/index&pagesize={$size}&pageidx={$i}&type=0&token={$this->token}&lang=zh_CN";
             $html = $this->curl($url);
@@ -163,6 +212,8 @@ class Mp
             $array = json_decode($match[1][0], TRUE);
             $result = array_merge($result, $array);
         }
+
+        // 多余的删掉
         while(count($result) > $num)
             array_pop($result);
         return $result;
