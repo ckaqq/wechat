@@ -6,9 +6,6 @@
  * @version 1.0
  */
 require_once __DIR__ . '/Cache.php';
-require_once __DIR__ . '/../libraries/qiniu/autoload.php';
-use Qiniu\Auth;
-use Qiniu\Storage\UploadManager;
 
 class Mp
 {
@@ -19,13 +16,18 @@ class Mp
      */
     private $cookie_str, $token;
 
+    /**
+     * 未读消息、新增用户数、用户总数
+     *
+     * @var array
+     */
     public $info;
 
     /**
      * 初始化
      *
-     * @param string $account 账号
-     * @param string $passwd  密码
+     * @param string $account MP账号
+     * @param string $passwd  MP密码
      * @param string $cacheType  缓存类型
      * @param string $cacheOption  缓存配置
      */
@@ -91,7 +93,7 @@ class Mp
      * 获取头像
      *
      * @param string $fakeid 用户id
-     * @return img
+     * @return jpg
      */
     public function getHeadImg($fakeid)
     {
@@ -218,7 +220,7 @@ class Mp
      * @param string $referer 有些页面必须
      * @return string 返回内容
      */
-    public function curl($url, $post="", $referer="")
+    private function curl($url, $post="", $referer="")
     {
         $ch = curl_init();
         curl_setopt($ch, CURLOPT_URL, $url);
