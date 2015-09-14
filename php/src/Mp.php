@@ -19,8 +19,6 @@ class Mp
      */
     private $cookie_str, $token;
 
-    private $qiniuToken;
-
     public $info;
 
     /**
@@ -54,6 +52,88 @@ class Mp
     public function setCache($cache)
     {
         $this->cache = $cache;
+    }
+
+    /**
+     * 获取用户信息
+     *
+     * @param string $fakeid 用户id
+     * @param string $content 内容
+     * @return boolean
+     */
+    public function sendMsg($fakeid, $content)
+    {
+        $url = "https://mp.weixin.qq.com/cgi-bin/singlesend?t=ajax-response&f=json&token=1{$this->token}&lang=zh_CN";
+        $post="token={$this->token}&lang=zh_CN&f=json&ajax=1&random=0.".rand(100000000,999999999)."&type=1&content=".urlencode($content)."&tofakeid={$fakeid}&imgcode=";
+        $referer = "https://mp.weixin.qq.com/cgi-bin/singlesendpage";
+        $html = $this->curl($url, $post, $referer);
+        $array = json_decode($html, TRUE);
+        return $array["base_resp"]["ret"] == "0";
+    }
+
+    /**
+     * 获取用户信息
+     *
+     * @param string $fakeid 用户id
+     * @return array
+     */
+    public function getUserInfo($fakeid)
+    {
+        $url = "https://mp.weixin.qq.com/cgi-bin/getcontactinfo?t=ajax-getcontactinfo&lang=zh_CN&fakeid=".$fakeid;
+        $post = "token={$this->token}&lang=zh_CN&f=json&ajax=1&random=".rand(100000000,999999999);
+        $referer = "https://mp.weixin.qq.com/cgi-bin/contactmanage";
+        $html = $this->curl($url ,$post, $referer);
+        $array = json_decode($html, TRUE);
+        return isset($array["contact_info"]) ? $array["contact_info"] : array();
+    }
+
+    /**
+     * 获取头像
+     *
+     * @param string $fakeid 用户id
+     * @return img
+     */
+    public function getHeadImg($fakeid)
+    {
+        $url = "https://mp.weixin.qq.com/misc/getheadimg?fakeid={$fakeid}&token={$this->token}&lang=zh_CN";
+        $referer = "https://mp.weixin.qq.com/cgi-bin/contactmanage";
+        return $this->curl($url, "", $referer);
+    }
+
+    /**
+     * 获取openid，失败则返回空字符串
+     *
+     * @param string $fakeid 用户id
+     * @return string
+     */
+    public function getOpenid($fakeid)
+    {
+        $array = $this->getChatLog($fakeid);
+        for ($i=0; $i < count($array); $i++) { 
+            if ($array[$i]['to_uin'] == $fakeid) {
+                $pattern = '/^&lt;a href=&quot;#(.*?)&quot;&gt; &lt;\/a&gt;$/';
+                if (preg_match($pattern, $array[$i]['content'], $match)) {
+                    return $match[1];
+                }
+            }
+        }
+        return '';
+    }
+
+    /**
+     * 获取聊天记录
+     *
+     * @param string $fakeid 用户id
+     * @return array
+     */
+    public function getChatLog($fakeid)
+    {
+        $url = "https://mp.weixin.qq.com/cgi-bin/singlesendpage?tofakeid={$fakeid}&t=message/send&action=index&token={$this->token}&lang=zh_CN";
+        $html = $this->curl($url);
+        $pattern = '/"msg_item":(.*?)\}\};/';
+        preg_match_all($pattern, stripslashes($html), $match);
+        $array = json_decode($match[1][0], TRUE);
+        return $array;
     }
 
     /**
