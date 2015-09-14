@@ -145,14 +145,27 @@ class Mp
      */
     public function getUserList($num = -1)
     {
+        $result = array();
         if ($num < 0) {
             $num = $this->info[1];
         }
-        $url = "https://mp.weixin.qq.com/cgi-bin/contactmanage?t=user/index&pagesize={$num}&pageidx=0&type=0&token={$this->token}&lang=zh_CN";
-        $html = $this->curl($url);
-        preg_match_all('/"contacts":(.*?)\}\)\.contacts,/', $html, $match);
-        $array = json_decode($match[1][0], TRUE);
-        return $array;
+        $size = $num;
+        $cnt = 1;
+        while ($size > 5000) {
+            $size /= 2;
+            $cnt *= 2;
+        }
+        $size = ceil($size);
+        for ($i=0; $i < $cnt; $i++) { 
+            $url = "https://mp.weixin.qq.com/cgi-bin/contactmanage?t=user/index&pagesize={$size}&pageidx={$i}&type=0&token={$this->token}&lang=zh_CN";
+            $html = $this->curl($url);
+            preg_match_all('/"contacts":(.*?)\}\)\.contacts,/', $html, $match);
+            $array = json_decode($match[1][0], TRUE);
+            $result = array_merge($result, $array);
+        }
+        while(count($result) > $num)
+            array_pop($result);
+        return $result;
     }
 
     /**
@@ -180,7 +193,6 @@ class Mp
      */
     public function login($account, $passwd)
     {
-        echo "登陆";
         // 尝试登陆
         $ch = curl_init();
         curl_setopt($ch, CURLOPT_URL, "https://mp.weixin.qq.com/cgi-bin/login");
