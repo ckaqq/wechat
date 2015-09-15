@@ -85,7 +85,13 @@ class Mp
         $pattern = '/groups":(.*?)\}\)\.groups/';
         preg_match_all($pattern, $html, $match);
         $array = json_decode($match[1][0], TRUE);
-        return $array;
+        $result = array();
+        foreach ($array as $group) {
+            $id = $group['id'];
+            unset($group['id']);
+            $result[$id] = $group;
+        }
+        return $result;
     }
 
     /**
