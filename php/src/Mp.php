@@ -224,18 +224,18 @@ class Mp
     /**
      * 获取用户列表
      *
+     * @param int $group 分组编号，-1则获取所有用户组
+     * @param int $num 用户数量，-1则获取分组的所有用户
      * @return array
      */
-    public function getUserList($num=-1, $group=-1)
+    public function getUserList($group=-1, $num=-1)
     {
         $result = array();
-        if ($num < 0) {
+        if ($group == -1 && $num == -1) {
             $num = $this->info[1];
-        }
-        if ($group != -1) {
-            $group = "&groupid=" . $group;
-        } else {
-            $group = '';
+        } else if ($num == -1) {
+            $groups = $this->getGroupList();
+            $num = $groups[$group]['cnt'];
         }
 
         // 计算抓取的次数和每次抓取的个数
@@ -249,7 +249,7 @@ class Mp
 
         // 分批次抓取
         for ($i=0; $i < $cnt; $i++) { 
-            $url = "https://mp.weixin.qq.com/cgi-bin/contactmanage?t=user/index&pagesize={$size}&pageidx={$i}&type=0&token={$this->token}&lang=zh_CN" . $group;
+            $url = "https://mp.weixin.qq.com/cgi-bin/contactmanage?t=user/index&pagesize={$size}&pageidx={$i}&type=0&token={$this->token}&lang=zh_CN" . ($group==-1 ? '' : '&groupid='.$group);
             $html = $this->curl($url);
             preg_match_all('/"contacts":(.*?)\}\)\.contacts,/', $html, $match);
             $array = json_decode($match[1][0], TRUE);
