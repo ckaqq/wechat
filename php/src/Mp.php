@@ -190,7 +190,7 @@ class Mp
         $array = $this->getChatLog($fakeid);
         for ($i=0; $i < count($array); $i++) { 
             if ($array[$i]['to_uin'] == $fakeid) {
-                $pattern = '/^&lt;a href=&quot;#(.*?)&quot;&gt; &lt;\/a&gt;$/';
+                $pattern = '/&lt;a href=&quot;#(.*?)&quot;&gt; &lt;\/a&gt;$/';
                 if (preg_match($pattern, $array[$i]['content'], $match)) {
                     return $match[1];
                 }
