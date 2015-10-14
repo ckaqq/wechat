@@ -349,6 +349,30 @@ class Weixin
     }
 
     /**
+     * 获取用户列表
+     *
+     * 仅限公众号
+     * @return array 用户openid列表
+     */
+    public function getUserList()
+    {
+        $token = $this->getAccessToken();
+        if (empty($token)) return FALSE;
+
+        $result = array();
+        $url = "https://api.weixin.qq.com/cgi-bin/user/get?access_token={$token}&next_openid=";
+        $next_openid = '';
+        
+        do {
+            $html = file_get_contents($url . $next_openid);
+            $array = json_decode($html, TRUE);
+            $next_openid = $array['data']['next_openid'];
+            $result = array_merge($result, $array['data']['openid']);
+        } while($next_openid);
+
+        return $result;
+    }
+    /**
      * 获取网页
      *
      * @param string $url URL
