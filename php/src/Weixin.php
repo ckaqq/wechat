@@ -16,7 +16,7 @@ class Weixin
      *
      * @var string
      */
-    protected $appId, $appSecret;
+    protected $appID, $appSecret;
 
     /**
      * 消息类型
@@ -45,18 +45,20 @@ class Weixin
      * @param string $appID 应用ID
      * @param string $appSecret 应用密钥，可空
      * @param int    $agentID 企业号应用ID，公众号请勿填
+     * @param int    $cacheType 缓存类型
+     * @param array  $cacheOption 缓存参数
      */
-    public function __construct($appID, $appSecret='', $agentID=-1)
+    public function __construct($appID, $appSecret='', $agentID=-1, $cacheType=0, $cacheOption=array())
     {
         $this->appID     = $appID;
         $this->appSecret = $appSecret;
-        if ($agentID == -1 || $agentID === "AGENTID") {
+        if ($agentID < 0 || $agentID === "AGENTID") {
             $this->wxType = 1;
         } else {
             $this->wxType = 2;
             $this->agentID = $agentID;
         }
-        $this->cache     = new Cache($appID);
+        $this->cache = new Cache($appID, $cacheType, $cacheOption);
     }
 
     /**
@@ -74,16 +76,16 @@ class Weixin
      *
      * @return string
      */
-    public function getAccessToken()
+    public function getAccessToken($noCache=false)
     {
         // 从内存里取
-        if (!empty($this->accessToken)) {
+        if (!$noCache && !empty($this->accessToken)) {
             return $this->accessToken;
         }
 
         // 从缓存里取
         $token = $this->cache->get('access_token');
-        if (!empty($token)) {
+        if (!$noCache && !empty($token)) {
             $this->accessToken = $token;
             return $this->accessToken;
         }
@@ -121,7 +123,7 @@ class Weixin
         } else {
             $url = "https://qyapi.weixin.qq.com/cgi-bin/menu/get?access_token={$token}&agentid={$this->agentID}";
         }
-        return json_decode($this->getHttp($url, $menu), TRUE);
+        return json_decode($this->getHttp($url), TRUE);
     }
 
     /**
