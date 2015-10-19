@@ -123,7 +123,12 @@ class Weixin
         } else {
             $url = "https://qyapi.weixin.qq.com/cgi-bin/menu/get?access_token={$token}&agentid={$this->agentID}";
         }
-        return json_decode($this->getHttp($url), TRUE);
+        $result = json_decode($this->getHttp($url), TRUE);
+        if ($result['errcode'] == 40001) {
+            $token = $this->getAccessToken(true);
+            $result = json_decode($this->getHttp($url), TRUE);
+        }
+        return $result;
     }
 
     /**
@@ -142,7 +147,13 @@ class Weixin
         } else {
             $url = "https://qyapi.weixin.qq.com/cgi-bin/menu/create?access_token={$token}&agentid={$this->agentID}";
         }
-        return json_decode($this->getHttp($url, json_encode($menu, JSON_UNESCAPED_UNICODE)), TRUE);
+        $menu = json_encode($menu, JSON_UNESCAPED_UNICODE);
+        $result = json_decode($this->getHttp($url, $menu), TRUE);
+        if ($result['errcode'] == 40001) {
+            $token = $this->getAccessToken(true);
+            $result = json_decode($this->getHttp($url, $menu), TRUE);
+        }
+        return $result;
     }
 
     /**
@@ -160,7 +171,12 @@ class Weixin
         } else {
             $url = "https://qyapi.weixin.qq.com/cgi-bin/menu/delete?access_token={$token}&agentid={$this->agentID}";
         }
-        return json_decode($this->getHttp($url), TRUE);
+        $result = json_decode($this->getHttp($url), TRUE);
+        if ($result['errcode'] == 40001) {
+            $token = $this->getAccessToken(true);
+            $result = json_decode($this->getHttp($url), TRUE);
+        }
+        return $result;
     }
     
     /**
