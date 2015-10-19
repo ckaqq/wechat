@@ -204,7 +204,7 @@ class Wechat
             $this->request['fromusername'], 
             $this->request['tousername'], 
             time(), 
-            trim($text)
+            $text
         );
         $this->echoMsg($resultStr);
     }
@@ -224,18 +224,18 @@ class Wechat
         );
         if (count($items) == 1) {
             $resultStr .=  sprintf($this->templateNewsContent, 
-                isset($items[0][0])?trim($items[0][0]):'', 
-                isset($items[0][1])?trim($items[0][1]):'', 
-                isset($items[0][2])?trim($items[0][2]):'', 
-                isset($items[0][3])?trim($items[0][3]):''
+                isset($items[0][0])?$items[0][0]:'', 
+                isset($items[0][1])?$items[0][1]:'', 
+                isset($items[0][2])?$items[0][2]:'', 
+                isset($items[0][3])?$items[0][3]:''
             );
         } else {
             for ($i=0; $i<count($items); $i++) {
                 $resultStr .=  sprintf($this->templateNewsContent, 
-                    isset($items[$i][0])?trim($items[$i][0]):'', 
+                    isset($items[$i][0])?$items[$i][0]:'', 
                     '', 
-                    isset($items[$i][1])?trim($items[$i][1]):'', 
-                    isset($items[$i][2])?trim($items[$i][2]):''
+                    isset($items[$i][1])?$items[$i][1]:'', 
+                    isset($items[$i][2])?$items[$i][2]:''
                 );
             }
         }
