@@ -390,6 +390,46 @@ class Weixin
 
         return $result;
     }
+
+    /**
+     *
+     * 获取 jsapi_ticket
+     *
+     */
+    public function getJsapiTicket()
+    {
+        $ticket = $this->cache->get('jsapi_ticket');
+        if (!empty($ticket)) return $ticket;
+        
+        $token = $this->getAccessToken();
+        if (empty($token)) return FALSE;
+
+        $array = json_decode($this->getHttp("https://qyapi.weixin.qq.com/cgi-bin/get_jsapi_ticket?access_token={$token}"), TRUE);
+        if ($array['errcode'] != 0 || empty($array['ticket'])) {
+            return FALSE;
+        }
+        $this->cache->set('jsapi_ticket', $array['ticket'], $array['expires_in']);
+        return $array['ticket'];
+    }
+    
+    /**
+     *
+     * 获取签名
+     *
+     * @param string $url 地址
+     * @param string $noncestr 随机字符串
+     * @param string $timestamp 时间戳
+     *
+     */
+    public function getSignature($url, $noncestr, $timestamp)
+    {
+        $ticket = $this->getJsapiTicket();
+        if (empty($ticket)) return FALSE;
+
+        $string = "jsapi_ticket={$ticket}&noncestr={$noncestr}&timestamp={$timestamp}&url={$url}";
+        return sha1($string);
+    }
+
     /**
      * 获取网页
      *
