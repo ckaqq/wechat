@@ -4,8 +4,7 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
 
-import com.qq.weixin.mp.aes.AesException;
-import com.qq.weixin.mp.aes.WXBizMsgCrypt;
+import com.qq.weixin.mp.aes.*;
 
 public class MsgCryptor extends WXBizMsgCrypt {
 
@@ -21,19 +20,30 @@ public class MsgCryptor extends WXBizMsgCrypt {
 	public MsgCryptor(String token) throws AesException {
 		super(token, "0000000000000000000000000000000000000000000", "");
 		this.token = token;
-		this.encodingAesKey = "";
+		this.encodingAesKey = "0000000000000000000000000000000000000000000";
 		this.appId = "";
 	}
 	
 	public boolean mpVerifySig(String signature, String timestamp, String nonce)
 	{
 		String[] array = new String[] { this.token, timestamp, nonce };
-		StringBuffer sb = new StringBuffer();
-		Arrays.sort(array);
-		for (int i = 0; i < 3; i++) {
-			sb.append(array[i]);
+		return variySha1Sign(signature, array);
+	}
+
+	public boolean qyVerifySig(String signature, String timestamp, String nonce, String echostr) {
+		String[] array = new String[] { this.token, timestamp, nonce, echostr };
+		return variySha1Sign(signature, array);
+	}
+
+	public String qyEchoStr(String signature, String timestamp, String nonce, String echostr) {
+        if (this.encodingAesKey.length() != 43){
+            return "ERR: 40004\n\n";
+        }
+		try {
+			return verifyUrl(signature, timestamp, nonce, echostr);
+		} catch (Exception e) {
+			return "";
 		}
-		return signature.equals(sha1(sb.toString()));
 	}
 	
 	public String sha1(String str)
@@ -57,5 +67,14 @@ public class MsgCryptor extends WXBizMsgCrypt {
 			return "";
 		}
 	}
-
+	
+	private boolean variySha1Sign(String signature,String[] array)
+	{
+		StringBuffer sb = new StringBuffer();
+		Arrays.sort(array);
+		for (int i = 0; i < array.length; i++) {
+			sb.append(array[i]);
+		}
+		return signature.equals(sha1(sb.toString()));
+	}
 }

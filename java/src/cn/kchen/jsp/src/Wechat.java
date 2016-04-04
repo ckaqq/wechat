@@ -7,11 +7,10 @@ import java.io.PrintWriter;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import com.qq.weixin.mp.aes.AesException;
+
 public class Wechat {
 
-	public boolean mDebug = false;
-	public String mToken = "weixin";
-	
 	public EventMessage mEventMessage;
 	public String mKeyword;
 	
@@ -25,50 +24,92 @@ public class Wechat {
 	private BufferedReader mBufferedReader;
 	private PrintWriter mPrintWriter;
 	private MsgCryptor mMsgCryptor;
+    private String mTimestamp, mNonce, mMsgSignature;
+    private boolean mEncrypted, mDebug;
 	
-	public Wechat(HttpServletRequest request, HttpServletResponse response) throws IOException, MyException{
-
+	public Wechat(HttpServletRequest request, HttpServletResponse response, String token, String encodingAesKey, String appId, boolean debug) throws IOException, MyException{
+		
+        mDebug = debug;
+        
 		// 设置编码
 		request.setCharacterEncoding("UTF-8");
         response.setCharacterEncoding("UTF-8");
+        mBufferedReader = request.getReader();
+        mPrintWriter = response.getWriter();
 
-        // 获取参数
-        mBufferedReader  = request.getReader();
-        mPrintWriter     = response.getWriter();
-        String timestamp = request.getParameter("timestamp");
-        String nonce     = request.getParameter("nonce");
-        String signature = request.getParameter("signature");
-        String echostr   = request.getParameter("echostr");
-        // 检查是否存在时间戳和随机数
-        if (!mDebug && (timestamp == null || nonce == null)) {
+        // 检查参数
+        mTimestamp = request.getParameter("timestamp");
+        mNonce     = request.getParameter("nonce");
+        if (!mDebug && (mTimestamp == null || mNonce == null)) {
         	throw new MyException("请通过微信访问");
         }
+
+        // 判断消息是否加密
+        mMsgSignature =  request.getParameter("msg_signature");
+        mEncrypted = mMsgSignature != null;
+        
+        // 判断是公众号还是企业号（1.公众号；2.企业号。）
+        String signature = request.getParameter("signature");
+        int wechatType = (signature == null) ? 2 : 1;
+        
+        // 其他参数
+        String echostr = request.getParameter("echostr");
         
         // 创建加密模块对象
         try {
-            mMsgCryptor = new MsgCryptor(mToken);
+            mMsgCryptor = new MsgCryptor(token, encodingAesKey, appId);
 		} catch (Exception e) {
 			e.printStackTrace();
         	throw new MyException("加密模块有误");
 		}
         
         // 验证签名
-        if(!mDebug){
-        	boolean validResult = mMsgCryptor.mpVerifySig(signature, timestamp, nonce);
-        	if (!validResult) {
-            	throw new MyException("签名验证失败");
+        if(!mDebug) {
+        	boolean validResult = true;
+        	if (wechatType == 1) { // 公众号
+        		validResult = mMsgCryptor.mpVerifySig(signature, mTimestamp, mNonce);
+        	} else if (echostr != null) { // 企业号
+            	validResult = mMsgCryptor.qyVerifySig(mMsgSignature, mTimestamp, mNonce, echostr);
         	}
-        }
-        
-        // 验证 TOKEN 则直接输出
-        if (echostr != null) {
-        	throw new MyException(echostr);
+        	if (!validResult) throw new MyException("签名验证失败");
         }
 
-		mEventMessage = XMLConverUtil.convertToObject(EventMessage.class, mBufferedReader);
+        // 解密并输出echostr
+        if (echostr != null){
+        	if (wechatType == 2) {
+        		echostr = mMsgCryptor.qyEchoStr(mMsgSignature, mTimestamp, mNonce, echostr);
+        	}
+        	throw new MyException(echostr);
+        }
+        
+        StringBuffer sb = new StringBuffer();
+        String s;
+        while((s = mBufferedReader.readLine()) != null) {
+        	sb.append(s);
+        }
+        String xml = sb.toString();
+        if (xml == null || xml.equals("")) throw new MyException("缺少数据");
+        
+        if (mEncrypted) {
+        	try {
+				xml = mMsgCryptor.decryptMsg(mMsgSignature, mTimestamp, mNonce, xml);
+			} catch (AesException e) {
+				e.printStackTrace();
+				throw new MyException("消息体解密失败");
+			}
+        }
+        
+		mEventMessage = XMLConverUtil.convertToObject(EventMessage.class, xml);
 	}
 	
-	private void echoMsg(String msg) {
+	private void echoMsg(String msg){
+		if (mEncrypted) {
+			try {
+				msg = mMsgCryptor.encryptMsg(msg, mTimestamp, mNonce);
+			} catch (AesException e) {
+				e.printStackTrace();
+			}
+		}
         mPrintWriter.append(msg);
 	}
 	

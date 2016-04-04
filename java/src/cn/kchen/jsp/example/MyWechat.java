@@ -11,7 +11,7 @@ import cn.kchen.jsp.src.Wechat;
 public class MyWechat extends Wechat {
 
 	public MyWechat(HttpServletRequest request, HttpServletResponse response) throws IOException, MyException {
-		super(request, response);
+		super(request, response, Config.TOKEN, Config.ENCODINGAESKEY, Config.APPID, Config.DEBUG);
 	}
 
     // 关注测试
