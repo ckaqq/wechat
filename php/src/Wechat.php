@@ -21,6 +21,7 @@ class Wechat
     protected $templateNewsContent = "<item><Title><![CDATA[%s]]></Title><Description><![CDATA[%s]]></Description><PicUrl><![CDATA[%s]]></PicUrl><Url><![CDATA[%s]]></Url></item>";
     protected $templateNewsEnd     = "</Articles></xml>";
     protected $templateCustomer    = "<xml><ToUserName><![CDATA[%s]]></ToUserName><FromUserName><![CDATA[%s]]></FromUserName><CreateTime>%s</CreateTime><MsgType><![CDATA[transfer_customer_service]]></MsgType></xml>";
+    protected $templateOneCustomer = "<xml><ToUserName><![CDATA[%s]]></ToUserName><FromUserName><![CDATA[%s]]></FromUserName><CreateTime>%s</CreateTime><MsgType><![CDATA[transfer_customer_service]]></MsgType><TransInfo><KfAccount><![CDATA[%s]]></KfAccount></TransInfo></xml>";
     protected $templateImage       = "<xml><ToUserName><![CDATA[%s]]></ToUserName><FromUserName><![CDATA[%s]]></FromUserName><CreateTime>%s</CreateTime><MsgType><![CDATA[image]]></MsgType><Image><MediaId><![CDATA[%s]]></MediaId></Image></xml>";
 
     /**
@@ -259,13 +260,22 @@ class Wechat
       *
       * @return void
       */
-    public function echoCustomer()
+    public function echoCustomer($customer="")
     {
-        $resultStr = sprintf($this->templateCustomer, 
-            $this->request['fromusername'], 
-            $this->request['tousername'], 
-            time()
-        );
+        if ($customer) {
+            $resultStr = sprintf($this->templateOneCustomer, 
+                $this->request['fromusername'], 
+                $this->request['tousername'], 
+                time(),
+                $customer
+            );
+        } else {
+            $resultStr = sprintf($this->templateCustomer, 
+                $this->request['fromusername'], 
+                $this->request['tousername'], 
+                time()
+            );
+        }
         $this->echoMsg($resultStr);
     }
 
